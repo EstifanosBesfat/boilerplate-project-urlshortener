@@ -27,28 +27,34 @@ app.get('/api/hello', function(req, res) {
 let urlDatabase = {};
 let counter = 1;
 
-app.post('/api/shorturl',(req, res) => {
+
+app.post('/api/shorturl', (req, res) => {
   const originalUrl = req.body.url;
 
-  // validate url format
+  // Validate URL format
   try {
     const parsedUrl = new URL(originalUrl);
+
+    // Check if domain resolves
     dns.lookup(parsedUrl.hostname, (err) => {
       if (err) {
-        return res.json({error: 'invalid url'});
+        return res.json({ error: 'invalid url' });
       }
+
+      // Save URL with a short code
       const shortCode = counter++;
       urlDatabase[shortCode] = originalUrl;
 
       res.json({
         original_url: originalUrl,
         short_url: shortCode
-      })
-    })
-  } catch (error) {
-    res.json({error: 'invalid url'})
+      });
+    });
+  } catch (e) {
+    res.json({ error: 'invalid url' });
   }
-})
+});
+
 
 app.get('/api/shorturl/:id',(req, res) => {
   const id = req.params.id;
