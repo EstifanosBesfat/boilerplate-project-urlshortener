@@ -73,16 +73,16 @@ app.post("/api/shorturl", async (req, res) => {
 /* REDIRECT */
 app.get("/api/shorturl/:id", async (req, res) => {
   const id = Number(req.params.id);
-
   const foundUrl = await Url.findOne({ short_url: id });
 
   if (!foundUrl) {
     return res.json({ error: "No short URL found for given input" });
   }
 
-  // FCC REQUIRES 301
-  res.redirect(301, foundUrl.original_url);
+  res.writeHead(301, { Location: foundUrl.original_url });
+  res.end();
 });
+
 
 /* START SERVER */
 app.listen(port, () => {
