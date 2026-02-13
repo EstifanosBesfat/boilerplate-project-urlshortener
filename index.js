@@ -1,27 +1,29 @@
 require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const dns = require("dns");
 const mongoose = require("mongoose");
+const urlParser = require("url");
 
 const app = express();
 
-/* IMPORTANT FOR FCC REDIRECT TEST */
+/* REQUIRED FOR RENDER + FCC */
 app.set("trust proxy", true);
 
-/* DB */
+/* DATABASE */
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
+  .then(() => console.log("Mongo connected"))
   .catch((err) => console.error(err));
 
 /* BASIC CONFIG */
 const port = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
-app.use("/public", express.static(`${process.cwd()}/public`));
+app.use("/public", express.static(process.cwd() + "/public"));
 
 app.get("/", (req, res) => {
   res.sendFile(process.cwd() + "/views/index.html");
@@ -43,45 +45,45 @@ const Url = mongoose.model("Url", urlSchema);
 app.post("/api/shorturl", async (req, res) => {
   const rawUrl = req.body.url;
 
-  let hostname;
-
-  try {
-    const parsed = new URL(rawUrl);
-    hostname = parsed.hostname;
-  } catch {
+  // parse WITHOUT modifying original string
+  const parsed = urlParser.parse(rawUrl);
+  if (!parsed.hostname) {
     return res.json({ error: "invalid url" });
   }
 
-  dns.lookup(hostname, async (err) => {
+  // dns validate (FCC requirement)
+  dns.lookup(parsed.hostname, { family: 4 }, async (err) => {
     if (err) return res.json({ error: "invalid url" });
 
     try {
-      const count = await Url.countDocuments();
-      const shortCode = count + 1;
+      const shortCode = (await Url.countDocuments()) + 1;
 
       await Url.create({
-        original_url: rawUrl,
+        original_url: rawUrl, // store EXACT input
         short_url: shortCode,
       });
 
-      res.json({ original_url: rawUrl, short_url: shortCode });
-    } catch (e) {
+      res.json({
+        original_url: rawUrl,
+        short_url: shortCode,
+      });
+    } catch {
       res.status(500).json({ error: "server error" });
     }
   });
 });
 
-/* REDIRECT */
-app.get("/api/shorturl/:id", async (req, res) => {
-  const id = Number(req.params.id);
-  const foundUrl = await Url.findOne({ short_url: id });
+/* REDIRECT — strict FCC compliant */
+app.get("/api/shorturl/:short_url", async (req, res) => {
+  const id = Number(req.params.short_url);
+  const urlDoc = await Url.findOne({ short_url: id });
 
-  if (!foundUrl) {
+  if (!urlDoc) {
     return res.json({ error: "No short URL found for given input" });
   }
 
   res.statusCode = 301;
-  res.setHeader("Location", foundUrl.original_url);
+  res.setHeader("Location", urlDoc.original_url);
   return res.end();
 });
 
