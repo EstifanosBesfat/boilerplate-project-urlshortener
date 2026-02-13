@@ -41,33 +41,33 @@ const Url = mongoose.model("Url", urlSchema);
 
 /* CREATE SHORT URL */
 app.post("/api/shorturl", async (req, res) => {
-  const originalUrl = req.body.url;
+  const rawUrl = req.body.url;
+
+  let hostname;
 
   try {
-    const parsedUrl = new URL(originalUrl);
-
-    // DNS VALIDATION (required by FCC)
-    dns.lookup(parsedUrl.hostname, async (err) => {
-      if (err) return res.json({ error: "invalid url" });
-
-      const count = await Url.countDocuments();
-      const shortCode = count + 1;
-
-      const newUrl = new Url({
-        original_url: originalUrl,
-        short_url: shortCode,
-      });
-
-      await newUrl.save();
-
-      res.json({
-        original_url: originalUrl,
-        short_url: shortCode,
-      });
-    });
+    const parsed = new URL(rawUrl);
+    hostname = parsed.hostname;
   } catch {
-    res.json({ error: "invalid url" });
+    return res.json({ error: "invalid url" });
   }
+
+  dns.lookup(hostname, async (err) => {
+    if (err) return res.json({ error: "invalid url" });
+
+    const count = await Url.countDocuments();
+    const shortCode = count + 1;
+
+    await Url.create({
+      original_url: rawUrl,   // IMPORTANT: store raw string only
+      short_url: shortCode,
+    });
+
+    res.json({
+      original_url: rawUrl,
+      short_url: shortCode,
+    });
+  });
 });
 
 /* REDIRECT */
