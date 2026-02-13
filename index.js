@@ -57,9 +57,10 @@ app.get('/api/shorturl/:id',(req, res) => {
   if(originalUrl) {
     res.redirect(originalUrl);
   } else {
-    res.json ({error: 'invalid url'});
+    res.json ({error: 'no short url found for given input'});
   }
-})
+});
+
 
 app.listen(port, function() {
   console.log(`Listening on port ${port}`);
