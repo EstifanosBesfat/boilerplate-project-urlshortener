@@ -53,21 +53,23 @@ app.post("/api/shorturl", async (req, res) => {
   }
 
   dns.lookup(hostname, async (err) => {
-    if (err) return res.json({ error: "invalid url" });
+  if (err) return res.json({ error: "invalid url" });
 
+  try {
     const count = await Url.countDocuments();
     const shortCode = count + 1;
 
     await Url.create({
-      original_url: rawUrl,   // IMPORTANT: store raw string only
-      short_url: shortCode,
-    });
-
-    res.json({
       original_url: rawUrl,
       short_url: shortCode,
     });
-  });
+
+    res.json({ original_url: rawUrl, short_url: shortCode });
+  } catch (e) {
+    res.status(500).json({ error: "server error" });
+  }
+});
+
 });
 
 /* REDIRECT */
