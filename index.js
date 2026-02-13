@@ -53,23 +53,22 @@ app.post("/api/shorturl", async (req, res) => {
   }
 
   dns.lookup(hostname, async (err) => {
-  if (err) return res.json({ error: "invalid url" });
+    if (err) return res.json({ error: "invalid url" });
 
-  try {
-    const count = await Url.countDocuments();
-    const shortCode = count + 1;
+    try {
+      const count = await Url.countDocuments();
+      const shortCode = count + 1;
 
-    await Url.create({
-      original_url: rawUrl,
-      short_url: shortCode,
-    });
+      await Url.create({
+        original_url: rawUrl,
+        short_url: shortCode,
+      });
 
-    res.json({ original_url: rawUrl, short_url: shortCode });
-  } catch (e) {
-    res.status(500).json({ error: "server error" });
-  }
-});
-
+      res.json({ original_url: rawUrl, short_url: shortCode });
+    } catch (e) {
+      res.status(500).json({ error: "server error" });
+    }
+  });
 });
 
 /* REDIRECT */
@@ -81,10 +80,10 @@ app.get("/api/shorturl/:id", async (req, res) => {
     return res.json({ error: "No short URL found for given input" });
   }
 
-  res.writeHead(301, { Location: foundUrl.original_url });
-  res.end();
+  res.statusCode = 301;
+  res.setHeader("Location", foundUrl.original_url);
+  return res.end();
 });
-
 
 /* START SERVER */
 app.listen(port, () => {
