@@ -1,3 +1,14 @@
 # URL Shortener Microservice
 
-This is the boilerplate code for the URL Shortener Microservice project. Instructions for building your project can be found at https://www.freecodecamp.org/learn/back-end-development-and-apis/back-end-development-and-apis-projects/url-shortener-microservice.
+A simple microservice that shortens URLs and redirects users to the original link. Built with **Node.js**, **Express**, and **MongoDB (Mongoose)** as part of the freeCodeCamp Back End Development and APIs certification projects.
+
+---
+
+## 🚀 Live Demo
+You can try the project here:  
+👉 [https://boilerplate-project-urlshortener-v428.onrender.com](https://boilerplate-project-urlshortener-v428.onrender.com)
+
+---
+
+## 👤 Author
+Developed by **Estifanos**
